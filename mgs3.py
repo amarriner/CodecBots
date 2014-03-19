@@ -19,11 +19,11 @@ def post_tweet(key, to, tweet):
       if not (re.match(r'([A-Za-z0-9])', c)):
          t = i
 
-      if (t - l) > 140:
+      if (t - l) > 140 - len(to) + 1:
          while re.match(r'^([ \.,])', string.strip(tweet[l:t])):
             l = l + 1
 
-         print Config.get('Name', key) + ': @' + to  + ' ' + string.strip(tweet[l:t])
+         print Config.get('Name', key) + ': ' + to + ' ' + string.strip(tweet[l:t])
 
          l = t
 
@@ -31,15 +31,25 @@ def post_tweet(key, to, tweet):
       l = l + 1
 
    if tweet[l:]:
-      print Config.get('Name', key) + ': @' + to + ' ' + string.strip(tweet[l:])
+      print Config.get('Name', key) + ': ' + to + ' ' + string.strip(tweet[l:])
 
-last_tweet = ''
-last_to = ''
+def process_conversation(conversation):
+   print '\n================================================================================================\n'
+
+   
+   for index, line in enumerate(conversation):
+      if index == 0 and len(conversation) == 1:
+         post_tweet(line['key'], '@snake', line['text'])
+      if index == 0 and len(conversation) > 1:
+         post_tweet(line['key'], '@' + conversation[index + 1]['key'], line['text'])
+      if index > 0:
+         post_tweet(line['key'], '@' + conversation[index - 1]['key'], line['text'])
+
 last_key = ''
-tweet = ''
 num_convos = 0
+conversation = []
 for i, line in enumerate(lines):
-   if num_convos == 2:
+   if num_convos == 3:
       break
 
    if i > int(Config.get('Script', 'Last Line')):
@@ -50,28 +60,21 @@ for i, line in enumerate(lines):
 
          if key in Config.options('Name'):
             if last_key != key:
-               last_to = key
-               if (last_tweet):
-                  post_tweet(last_key, last_to, last_tweet)
-
-               tweet = ''
+               conversation.append({'key': key, 'text': string.strip(string.strip(line.replace(Config.get('Name', key) + ': ', '')), '"')})
 
             last_key = key
-            tweet = string.strip(string.strip(line.replace(Config.get('Name', key) + ': ', '')), '"')
-            last_tweet = tweet
 
       else:
          if line[:3] == '---' or line[:3] == '===' or line[:3] == '###':
-            if (last_tweet):
-               post_tweet(last_key, last_to, last_tweet)
+            if len(conversation):
                num_convos = num_convos + 1
+               process_conversation(conversation)
 
-            last_tweet = ''
-            last_to = last_key
-            tweet = ''
+            conversation = []
             last_key = ''
 
          if last_key in Config.options('Name'):
             if line[:5] == '     ':
-               tweet = tweet + ' ' + string.strip(string.strip(line), '"')
-               last_tweet = tweet
+               conversation[len(conversation) - 1]['text'] = conversation[len(conversation) - 1]['text'] + ' ' + string.strip(string.strip(line), '"')
+
+print '\n================================================================================================\n'
