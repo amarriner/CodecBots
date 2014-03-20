@@ -1,5 +1,11 @@
 #!/usr/bin/python
 
+# ------------------------------------------------------------------------------------------------
+# Twitter bots that have Metal Gear Solid codec conversations with each other
+# Author: Aaron Marriner (https://twitter.com/amarriner)
+# https://github.com/amarriner/CodecBots
+# ------------------------------------------------------------------------------------------------
+
 import ConfigParser
 import re
 import string
@@ -31,10 +37,13 @@ for key in Config.options('Names'):
       # Pausing so we don't run into any usage errors for twitter
       time.sleep(2)
 
+
+# ------------------------------------------------------------------------------------------------
 # This function tweets a line of conversation for a particular bot.
 # If the line is longer than 140 characters, the function will split it into several tweets until
 # it has exhausted the line. It will generally tweet at another bot and will sometimes be in reply
 # to a previous tweet in the conversation if there is one.
+# ------------------------------------------------------------------------------------------------
 def post_tweet(key, to, tweet, last_status=twitter.Status):
    l = 0
    t = 0
@@ -84,12 +93,13 @@ def post_tweet(key, to, tweet, last_status=twitter.Status):
    # Return the resulting status object so it can be passed back in and used for its reply id
    return status
 
+
+# ------------------------------------------------------------------------------------------------
 # This function merely loops through a list of conversation lines between characters
+# ------------------------------------------------------------------------------------------------
 def process_conversation(conversation):
 
-   # Print a debug line and set up the last_status variable which will affect whether a tweet is in response
-   # to a previous tweet or not
-   print "\n================================================================================================\n"
+   # Set up the last_status variable which will affect whether a tweet is in response to a previous tweet or not
    last_status = twitter.Status
    last_status.id = None
 
@@ -110,14 +120,22 @@ def process_conversation(conversation):
       # Wait 10 minutes before tweeting the next line of dialog
       time.sleep(60 * 10)
 
+
+# ------------------------------------------------------------------------------------------------
+# Main logic flow
+# ------------------------------------------------------------------------------------------------
 last_key = ''
 conversation = []
 for i, line in enumerate(lines):
 
-   # On startup, skip a certain number of lines as determined by a config value. Ideally, this would write the
-   # config file on every iteration so it updates in case of crash, but haven't gotten that working yet
+   # On startup, skip a certain number of lines as determined by a config value. 
    if i > int(Config.get('Script', 'Last Line')):
+
+      # Update the config file with the last line read 
       Config.set('Script', 'Last Line', str(i))
+      f = open(INI_FILE, 'w')
+      Config.write(f)
+      f.close()
 
       # Determine if the line starts with some characters and a colon
       match = re.match(r'^.*: ', line)
@@ -146,7 +164,9 @@ for i, line in enumerate(lines):
             # So if we have any lines of dialog to tweet, process them then wait a period of time before 
             # looking for a new conversation to process
             if len(conversation):
+               print "\n================================================================================================\n"
                print 'Processing conversation ... (Line ' + str(i) + ')'
+               print "\n------------------------------------------------------------------------------------------------\n"
                process_conversation(conversation)
                time.sleep(60 * 60 * 8)
 
