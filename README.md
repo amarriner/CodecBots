@@ -1,6 +1,6 @@
 # Metal Gear Solid Codec Bots
 
-*This is several twitter accounts that run through transcripts of Metal Gear Solid codec conversations with each other*
+*Several twitter accounts that run through transcripts of Metal Gear Solid codec conversations with each other*
 
 Currently the bots are running through [a transcription of Metal Gear Solid 3 codec 
 conversations](http://www.gamefaqs.com/ps2/914828-metal-gear-solid-3-snake-eater/faqs/43456). Every several hours the 
