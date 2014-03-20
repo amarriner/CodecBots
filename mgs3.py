@@ -49,9 +49,17 @@ def post_tweet(key, to, tweet, last_status=twitter.Status):
    t = 0
    dot = ''
 
+   # Set up status object in case something goes wrong
+   status = twitter.Status
+   status.id = None
+
    # Use .@ replies to make sure non-followers see it
    if last_status.id:
       dot = '.'
+
+   # If the to variable is not Snake, add him because everyone is always talking to him
+   if to != '@' + Config.get('Usernames', 'snake'):
+      to = '@' + Config.get('Usernames', 'snake') + ' ' + to
 
    # Step through each character in the text to be tweeted
    for i,c in enumerate(tweet):
@@ -61,12 +69,16 @@ def post_tweet(key, to, tweet, last_status=twitter.Status):
       #   * t represents the last good break where we can tweet without splitting a word up and
       #     still be under 140 characters
       #   * l represents the last t value we used to tweet
-      if ((t + (i - t)) - l) >= 140 - (len(to) + 2):
+      if ((t + (i - t)) - l) >= 140 - (len(to) + 3):
 
          # This is a kludgey way of stripping out "bad" characters at the beginning of a tweet
          # Mainly to make the tweet look nicer so it doesn't start with periods, commas, etc.
-         while re.match(r'^([ \.,])', string.strip(tweet[l:t])):
-            l = l + 1
+         # Snake says '...' a lot so make a special case for that. Sometimes characters prefix
+         # lines with '...', but also say something. The prefix will be stripped which should 
+         # probably be fixed. Like I said...kludgey
+         if (string.strip(tweet[l:t]) != '...'):
+            while re.match(r'^([ \.,])', string.strip(tweet[l:t])):
+               l = l + 1
 
          # Post the tweet to twitter and retain the resulting status object, print out a debug line and wait 
          # five seconds before continuing
@@ -74,7 +86,7 @@ def post_tweet(key, to, tweet, last_status=twitter.Status):
          print dot + to + ' ' + string.strip(tweet[l:t]) + ' (' + str(status.id) + ')'
          time.sleep(5)
 
-         # Update l because we tweeted
+         # Update l because we posted a tweet
          l = t
 
       # Update t because we found a good break point (i.e., we're in between words)
@@ -82,8 +94,9 @@ def post_tweet(key, to, tweet, last_status=twitter.Status):
          t = i
 
    # Again, stripping out "bad" characters"
-   while re.match(r'^([ \.,])', string.strip(tweet[l:])):
-      l = l + 1
+   if (string.strip(tweet[l:]) != '...'):
+      while re.match(r'^([ \.,])', string.strip(tweet[l:])):
+         l = l + 1
 
    # If there are characters left (most likely there ar), tweet the rest
    if tweet[l:]:
@@ -118,7 +131,7 @@ def process_conversation(conversation):
          last_status = post_tweet(line['key'], '@' + Config.get('Usernames', conversation[index - 1]['key']), line['text'], last_status)
 
       # Wait 10 minutes before tweeting the next line of dialog
-      time.sleep(60 * 10)
+      time.sleep(60 * 3)
 
 
 # ------------------------------------------------------------------------------------------------
