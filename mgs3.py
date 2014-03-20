@@ -58,7 +58,8 @@ def post_tweet(key, to, tweet, last_status=twitter.Status):
       dot = '.'
 
    # If the to variable is not Snake, add him because everyone is always talking to him
-   if to != '@' + Config.get('Usernames', 'snake'):
+   # Don't add it if it's Snake who is talking, natch...
+   if to != '@' + Config.get('Usernames', 'snake') and key != 'snake':
       to = '@' + Config.get('Usernames', 'snake') + ' ' + to
 
    # Step through each character in the text to be tweeted
